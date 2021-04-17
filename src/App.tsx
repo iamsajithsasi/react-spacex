@@ -1,24 +1,25 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect, lazy, Suspense } from "react";
+// import './App.css';
+import { useDispatch } from "react-redux";
+import ErrorboundaryBox from "./component/errorboundary";
+import LoaderBox from "./component/loader";
+import { fetchSpaceXData } from "./store/datastore";
+
+const SpaceBlog = lazy(() => import("./component/blog"));
 
 function App() {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchSpaceXData())
+  }, [dispatch]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="bg-light min-vh-100">
+      <ErrorboundaryBox>
+        <Suspense fallback={<LoaderBox />}>
+          <SpaceBlog />
+        </Suspense>
+      </ErrorboundaryBox>
     </div>
   );
 }
