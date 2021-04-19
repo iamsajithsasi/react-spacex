@@ -9,10 +9,20 @@ export const fetchSpaceXData = createAsyncThunk(
   }
 );
 
+export const dupSpaceXData = createAsyncThunk(
+  "spacex/dupSpaceXData",
+  async () => {
+    return fetch("https://api.spacexdata.com/v3/launches").then((res) =>
+      res.json()
+    );
+  }
+);
+
 export const spaceXSlice = createSlice({
   name: "spacex",
   initialState: {
     data: [],
+    dup: [],
     status: "init",
   },
   reducers: {
@@ -26,10 +36,15 @@ export const spaceXSlice = createSlice({
       state.status = "success";
     },
     [fetchSpaceXData.rejected]: (state, action) => {
+      state.data = [];
       state.status = "failed";
     },
     [fetchSpaceXData.pending]: (state, action) => {
+      state.data = [];
       state.status = "pending";
+    },
+    [dupSpaceXData.fulfilled]: (state, action) => {
+      state.dup = action.payload;
     },
   },
 });
