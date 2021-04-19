@@ -10,12 +10,10 @@ import {
 } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import BlogFilters from "./filters";
-import moment from "moment";
 
 export default function SpaceBlog() {
-  const data = useSelector((state) => state.spacex.data);
+  const spaceXData = useSelector((state) => state.spacex);
   const [state, setState] = useState([]);
-  const [stateDup, setStateDup] = useState([]);
   const [show, setShow] = useState(false);
   const [modalInfo, setModalInfo] = useState();
 
@@ -32,114 +30,24 @@ export default function SpaceBlog() {
     handleShow();
   };
 
-  const getDateDiff = (item) => {
-    let b = moment(item.launch_date_local);
-    let a = moment();
-    let x = a.diff(b, "days");
-    return x;
-  };
-
-  const filLaunch = (data, launch_status) => {
-    let arr = [];
-    if (launch_status == "failure") {
-      let res = data.filter((item) => item.launch_success == false);
-      arr = res;
-    } else if (launch_status == "success") {
-      let res = data.filter((item) => item.launch_success == true);
-      arr = res;
-    } else if (launch_status == "upcoming") {
-      let res = data.filter((item) => item.upcoming == true);
-      arr = res;
-    } else {
-      arr.push(stateDup);
-    }
-    return arr;
-  };
-
-  const filDate = (data, launch_date) => {
-    let arr = [];
-    if (launch_date == "week") {
-      let res = data.filter((item) => {
-        if (getDateDiff(item) <= 7) {
-          return item;
-        }
-      });
-      arr = res;
-    } else if (launch_date == "month") {
-      let res = data.filter((item) => {
-        if (getDateDiff(item) <= 31) {
-          return item;
-        }
-      });
-      arr = res;
-    } else if (launch_date == "year") {
-      let res = data.filter((item) => {
-        if (getDateDiff(item) >= 365) {
-          return item;
-        }
-      });
-      arr = res;
-    } else {
-      arr.push(stateDup);
-    }
-    return arr;
-  };
-
-  const filDateLaunch = (data, launch_date, launch_status) => {
-    let cpyArr = data.slice();
-    let filterArr = [];
-    filterArr = [...filDate(cpyArr, launch_date)];
-    filterArr = [...filLaunch(filterArr, launch_status)];
-    return filterArr;
-  };
-
-  const selectedFilters = (data) => {
-    const { launch_date, launch_status, search } = data;
-    console.log(data, launch_date, launch_status);
-    let cpyArr = Array.from(stateDup);
-    let filterArr = [];
-    if (launch_date && !launch_status) {
-      filterArr = [...filDate(cpyArr, launch_date)];
-    } else if (!launch_date && launch_status) {
-      filterArr = [...filLaunch(cpyArr, launch_status)];
-    } else if (launch_date && launch_status) {
-      filterArr = [...filDateLaunch(cpyArr, launch_date, launch_status)];
-    } else if (!launch_date && !launch_status) {
-      filterArr.push(stateDup);
-    }
-
-    if (search && search.length > 0) {
-      let srch = stateDup.filter((obj) =>
-        obj.mission_name.toLowerCase().includes(search.toLowerCase())
-      );
-      filterArr = [...srch];
-    }
-    // else {
-    //   filterArr = [...stateDup];
-    // }
-    setState(filterArr);
-  };
-
   useEffect(() => {
-    // console.log("eff ", data);
-    setState(data);
-    setStateDup(data);
-  }, [data]);
-
-  // useEffect(() => {
-  //   let b = moment("2021-04-17T10:30:00+12:00");
-  //   let a = moment();
-  //   let x = a.diff(b, "days");
-  //   console.log(x);
-  // }, []);
+    setState(spaceXData.data);
+  }, [spaceXData]);
 
   return (
     <Container>
       <h3 className="text-center pt-3 mb-5">SpaceX Journey</h3>
 
-      <BlogFilters selectedFilters={selectedFilters} />
+      <BlogFilters />
 
-      <BlogCards state={state} openModal={openModal} />
+      {spaceXData.status == "pending" ? (
+        <p>Loading Data...</p>
+      ) : spaceXData.status == "error" ? (
+        <p>Error!!! Unable to load data. Please try again later</p>
+      ) : (
+        <BlogCards state={state} openModal={openModal} />
+      )}
+
       {/* modal */}
       <Modal
         show={show}
@@ -165,11 +73,31 @@ export default function SpaceBlog() {
           {!modalInfo?.launch_success && (
             <>
               <h5 className="text-muted mt-3">Failure Details: </h5>
-              {modalInfo?.launch_failure_details?.length > 0
-                ? modalInfo?.launch_failure_details
+              {modalInfo?.launch_failure_details?.reason?.length > 0
+                ? modalInfo?.launch_failure_details.reason
                 : "Unavailable"}
             </>
           )}
+          <h5 className="text-muted mt-3">Resources: </h5>
+          <Row>
+            <Col sm="6">
+              {modalInfo?.links?.mission_patch && (
+                <img
+                  style={{ maxWidth: "300px", objectFit: "cover" }}
+                  src={modalInfo?.links?.mission_patch}
+                  alt="image"
+                />
+              )}
+            </Col>
+            <Col sm="6">
+              <iframe src={modalInfo?.links?.video_link} />
+            </Col>
+          </Row>
+          <div className="mt-3">
+            <a href={modalInfo?.links?.wikipedia}>
+              <u>Read more from WIKI</u>
+            </a>
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
@@ -184,17 +112,35 @@ export default function SpaceBlog() {
 const BlogCards = ({ state, openModal }) => {
   return (
     <Row>
-      {state.length > 0 &&
+      {state && state?.length > 0 ? (
         state.map((item, idx) => (
           <Col key={idx} sm="6" md="6" lg="4" className="mb-4">
             <Card className="h-100">
               <Card.Body className="pb-5 position-relative">
                 <Card.Title>
-                  {item?.mission_name ? item?.mission_name : "N/A"}
+                  <div className="d-flex">
+                    <div className="d-flex flex-column w-100">
+                      <span>
+                        {item?.mission_name ? item?.mission_name : "N/A"}
+                      </span>
+                      <div>
+                        <BadgeCards item={item} />
+                      </div>
+                    </div>
+                    <div className="ml-auto text-right">
+                      {item?.links?.mission_patch_small && (
+                        <img
+                          style={{ maxWidth: "60px", objectFit: "cover" }}
+                          src={item?.links?.mission_patch_small}
+                          alt="image"
+                        />
+                      )}
+                    </div>
+                  </div>
                 </Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">
+                {/* <Card.Subtitle className="mb-2 text-muted">
                   <BadgeCards item={item} />
-                </Card.Subtitle>
+                </Card.Subtitle> */}
                 <hr />
                 <Card.Text>
                   <b className="text-muted">Description: </b>
@@ -215,7 +161,10 @@ const BlogCards = ({ state, openModal }) => {
               </Card.Body>
             </Card>
           </Col>
-        ))}
+        ))
+      ) : (
+        <p>No data available</p>
+      )}
     </Row>
   );
 };
@@ -224,7 +173,9 @@ const BadgeCards = ({ item }) => {
     <>
       {item?.launch_date_local && (
         <Badge pill variant="info" className="mr-2">
-          <TimeCard date={item?.launch_date_local} />
+          <small>
+            <TimeCard date={item?.launch_date_local} />
+          </small>
         </Badge>
       )}
       {JSON.stringify(item?.launch_success) && (
@@ -233,7 +184,7 @@ const BadgeCards = ({ item }) => {
           variant={item.launch_success ? "success" : "warning"}
           className="mr-2"
         >
-          {item.launch_success ? "Success" : "Failure"}
+          <small>{item.launch_success ? "Success" : "Failure"}</small>
         </Badge>
       )}
       {item?.upcoming && (
