@@ -80,17 +80,24 @@ export default function SpaceBlog() {
           )}
           <h5 className="text-muted mt-3">Resources: </h5>
           <Row>
-            <Col sm="6">
+            <Col sm="6" className="my-3">
               {modalInfo?.links?.mission_patch && (
                 <img
-                  style={{ maxWidth: "300px", objectFit: "cover" }}
+                  style={{
+                    width: "100%",
+                    maxWidth: "300px",
+                    objectFit: "cover",
+                  }}
                   src={modalInfo?.links?.mission_patch}
                   alt="image-detail"
                 />
               )}
             </Col>
-            <Col sm="6">
-              <iframe title="video" src={modalInfo?.links?.video_link} />
+            <Col sm="6" className="my-3">
+              <iframe
+                title="video"
+                src={`https://www.youtube.com/embed/${modalInfo?.links?.youtube_id}`}
+              ></iframe>
             </Col>
           </Row>
           <div className="mt-3">
