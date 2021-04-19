@@ -115,7 +115,7 @@ const BlogCards = ({ state, openModal }) => {
       {state && state?.length > 0 ? (
         state.map((item, idx) => (
           <Col key={idx} sm="6" md="6" lg="4" className="mb-4">
-            <Card className="h-100">
+            <Card className="h-100 shadow">
               <Card.Body className="pb-5 position-relative">
                 <Card.Title>
                   <div className="d-flex">
