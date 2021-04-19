@@ -3,14 +3,15 @@ import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useDispatch } from "react-redux";
 import ErrorboundaryBox from "./component/errorboundary";
 import LoaderBox from "./component/loader";
-import { fetchSpaceXData } from "./store/datastore";
+import { dupSpaceXData, fetchSpaceXData } from "./store/datastore";
 
 const SpaceBlog = lazy(() => import("./component/blog"));
 
 function App() {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(fetchSpaceXData())
+    dispatch(fetchSpaceXData());
+    dispatch(dupSpaceXData());
   }, [dispatch]);
 
   return (
