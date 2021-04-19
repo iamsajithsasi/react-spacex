@@ -85,12 +85,12 @@ export default function SpaceBlog() {
                 <img
                   style={{ maxWidth: "300px", objectFit: "cover" }}
                   src={modalInfo?.links?.mission_patch}
-                  alt="image"
+                  alt="image-detail"
                 />
               )}
             </Col>
             <Col sm="6">
-              <iframe src={modalInfo?.links?.video_link} />
+              <iframe title="video" src={modalInfo?.links?.video_link} />
             </Col>
           </Row>
           <div className="mt-3">
